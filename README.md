@@ -15,6 +15,7 @@ A complete, offline-playable HTML5 sniper game designed for mobile.
 - **Reload** and **Zoom toggle** buttons
 - Fully **offline** after first open
 - **PWA-ready** (Add to Home Screen on Samsung/Android)
+- Official neon hot-pink theme with stick-figure-in-crosshairs icon
 
 ## How to Play
 
@@ -32,10 +33,22 @@ A complete, offline-playable HTML5 sniper game designed for mobile.
 - **ZOOM** button (cycles x1 / x2 / x3)
 - **EASY** toggle for unlimited ammo
 
-## Files
+## Files in this repo
 
-- `sniper-scope-game.html` – The complete playable game (single file)
-- Icons and splash screens available in the project assets
+- `sniper-scope-game.html` – The complete playable game (single file, fully offline)
+- `README.md` – This file
+
+## Official Assets (neon hot pink theme)
+
+The following assets were designed for the app and are available in the project workspace:
+
+- **App Icon 192×192** – `sniper-scope-icon-192.png`
+- **App Icon 512×512** – `sniper-scope-icon-512.png`
+- **Splash Screen 1** (clean logo style) – `splash-screen-1.jpg`
+- **Splash Screen 2** (cinematic scope style) – `splash-screen-2.jpg`
+- **Crosshair View** (pink) – `sniper-scope-crosshair-pink.jpg`
+
+These match the stick-figure-with-headset locked in neon pink crosshairs identity.
 
 ## Version
 
@@ -44,4 +57,4 @@ Neon Hot Pink theme · PWA offline support · Stick-figure headshot targets
 
 ---
 
-Made for Samsung / Android devices. Just download and open.
+Made for Samsung / Android devices. Just download and open the HTML file.
