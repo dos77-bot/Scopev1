@@ -1,0 +1,655 @@
+<!-- Sniper Scope v1.2 - 2026-11-20 | PWA Offline Ready | Optimized HTML5 Android | Headshot-only | 100 Levels | Easy Mode -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0f0a">
+<meta name="description" content="Finger-swipe sniper scope game. 100 levels, headshot-only stick figures, ropes & locks puzzles. Fully offline playable on Samsung/Android.">
+<meta name="application-name" content="Sniper Scope">
+<link rel="manifest" id="manifestLink">
+<title>Sniper Scope - 100 Levels</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:none;user-select:none;-webkit-user-select:none;}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0f0a;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;}
+#gameCanvas{display:block;width:100%;height:100%;background:#1a2a1a;}
+#ui{position:fixed;inset:0;pointer-events:none;z-index:10;}
+.btn{pointer-events:auto;position:absolute;background:rgba(20,40,20,0.88);border:2px solid #4a8a4a;color:#a0e0a0;font-size:15px;font-weight:700;border-radius:12px;padding:14px 18px;min-width:90px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.5);backdrop-filter:blur(6px);}
+.btn:active{background:#2a5a2a;transform:scale(0.96);}
+#btnReload{bottom:28px;left:18px;}
+#btnZoom{bottom:28px;right:18px;}
+#btnEasy{top:18px;right:18px;font-size:13px;padding:10px 14px;background:rgba(40,20,20,0.88);border-color:#8a4a4a;color:#e0a0a0;}
+#btnEasy.active{background:rgba(20,60,20,0.92);border-color:#4a8a4a;color:#a0e0a0;}
+#hud{position:absolute;top:18px;left:18px;color:#c0e0c0;font-size:15px;line-height:1.45;text-shadow:0 1px 3px #000;pointer-events:none;}
+#msg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#e0ffe0;font-size:22px;font-weight:700;text-align:center;text-shadow:0 2px 8px #000;pointer-events:none;opacity:0;transition:opacity 0.3s;z-index:15;}
+#startScreen{position:fixed;inset:0;background:linear-gradient(180deg,#0a1a0a 0%,#0a0f0a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;color:#c0e0c0;text-align:center;padding:24px;}
+#startScreen h1{font-size:34px;margin-bottom:10px;color:#80e080;letter-spacing:1.5px;text-shadow:0 0 20px rgba(80,200,80,0.3);}
+#startScreen p{font-size:15px;opacity:0.9;margin:7px 0;max-width:340px;line-height:1.45;}
+#startBtn{margin-top:26px;padding:16px 52px;font-size:20px;font-weight:700;background:#1a4a1a;border:3px solid #4a8a4a;color:#c0ffc0;border-radius:16px;pointer-events:auto;box-shadow:0 6px 20px rgba(0,0,0,0.4);}
+#startBtn:active{background:#2a6a2a;}
+.controls-info{margin-top:22px;font-size:13px;opacity:0.75;line-height:1.55;}
+.pwa-note{margin-top:18px;font-size:12px;opacity:0.6;max-width:300px;line-height:1.4;}
+#offlineBadge{position:fixed;top:8px;left:50%;transform:translateX(-50%);background:rgba(30,80,30,0.9);color:#a0e0a0;font-size:11px;padding:4px 12px;border-radius:20px;z-index:30;display:none;border:1px solid #4a8a4a;}
+</style>
+</head>
+<body>
+<div id="offlineBadge">OFFLINE READY</div>
+<canvas id="gameCanvas"></canvas>
+<div id="ui">
+  <div id="hud"></div>
+  <div id="msg"></div>
+  <button class="btn" id="btnReload">RELOAD</button>
+  <button class="btn" id="btnZoom">ZOOM</button>
+  <button class="btn" id="btnEasy">EASY: OFF</button>
+</div>
+<div id="startScreen">
+  <h1>SNIPER SCOPE</h1>
+  <p>100 Levels • Headshot Only<br>Stick Figures with Headsets</p>
+  <p>Swipe to aim • Hold to zoom • Release to fire</p>
+  <div class="controls-info">
+    RELOAD button • ZOOM toggle<br>
+    Easy Mode = Unlimited Ammo<br>
+    Shoot ropes & locks to reveal targets
+  </div>
+  <button id="startBtn">START MISSION</button>
+  <div class="pwa-note">
+    Fully offline after first open.<br>
+    On Samsung/Android: Menu → Add to Home screen<br>
+    for app-like fullscreen play.
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+// ============== PWA MANIFEST (embedded) ==============
+const manifest = {
+  name: "Sniper Scope",
+  short_name: "Sniper",
+  description: "100-level finger-swipe sniper game. Headshot-only stick figures, ropes, locks, Easy Mode.",
+  start_url: "./",
+  display: "standalone",
+  orientation: "portrait",
+  background_color: "#0a0f0a",
+  theme_color: "#0a0f0a",
+  categories: ["games", "entertainment"],
+  icons: [
+    {
+      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230a1a0a'/%3E%3Ccircle cx='256' cy='256' r='180' fill='none' stroke='%234a8a4a' stroke-width='24'/%3E%3Ccircle cx='256' cy='256' r='12' fill='%23a0e0a0'/%3E%3Cline x1='256' y1='80' x2='256' y2='140' stroke='%23a0e0a0' stroke-width='10'/%3E%3Cline x1='256' y1='372' x2='256' y2='432' stroke='%23a0e0a0' stroke-width='10'/%3E%3Cline x1='80' y1='256' x2='140' y2='256' stroke='%23a0e0a0' stroke-width='10'/%3E%3Cline x1='372' y1='256' x2='432' y2='256' stroke='%23a0e0a0' stroke-width='10'/%3E%3C/svg%3E",
+      sizes: "512x512",
+      type: "image/svg+xml",
+      purpose: "any"
+    },
+    {
+      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%230a1a0a'/%3E%3Ccircle cx='96' cy='96' r='70' fill='none' stroke='%234a8a4a' stroke-width='12'/%3E%3Ccircle cx='96' cy='96' r='6' fill='%23a0e0a0'/%3E%3C/svg%3E",
+      sizes: "192x192",
+      type: "image/svg+xml",
+      purpose: "any"
+    }
+  ]
+};
+
+const manifestBlob = new Blob([JSON.stringify(manifest)], {type: "application/json"});
+const manifestURL = URL.createObjectURL(manifestBlob);
+document.getElementById("manifestLink").href = manifestURL;
+
+// Simple Service Worker registration (works when origin allows it)
+if ("serviceWorker" in navigator) {
+  const swCode = `
+    const CACHE = "sniper-scope-v1.2";
+    self.addEventListener("install", e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.addAll(["./"])));
+      self.skipWaiting();
+    });
+    self.addEventListener("activate", e => {
+      e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))));
+      self.clients.claim();
+    });
+    self.addEventListener("fetch", e => {
+      e.respondWith(
+        caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match("./")))
+      );
+    });
+  `;
+  const swBlob = new Blob([swCode], {type: "application/javascript"});
+  const swURL = URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swURL).then(() => {
+    console.log("SW registered – offline support active");
+    const badge = document.getElementById("offlineBadge");
+    if (badge) {
+      badge.style.display = "block";
+      setTimeout(() => badge.style.display = "none", 2500);
+    }
+  }).catch(() => {
+    // file:// or restricted origin – still fully playable offline
+  });
+}
+
+// ============== GAME CONFIG ==============
+const W = () => window.innerWidth;
+const H = () => window.innerHeight;
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d", { alpha: false });
+const hud = document.getElementById("hud");
+const msgEl = document.getElementById("msg");
+const btnReload = document.getElementById("btnReload");
+const btnZoom = document.getElementById("btnZoom");
+const btnEasy = document.getElementById("btnEasy");
+const startScreen = document.getElementById("startScreen");
+const startBtn = document.getElementById("startBtn");
+
+let easyMode = false;
+let currentLevel = 1;
+let maxUnlocked = 1;
+let gameState = "start";
+let ammo = 6;
+let maxAmmo = 6;
+let zoomLevel = 1;
+let isHolding = false;
+let aimX = 0.5, aimY = 0.4;
+let scopeSway = 0;
+let particles = [];
+let targets = [];
+let ropes = [];
+let locks = [];
+let wind = 0;
+let levelTime = 0;
+let lastTime = 0;
+let killCount = 0;
+let totalTargets = 0;
+
+try {
+  const saved = localStorage.getItem("sniperProgress");
+  if (saved) {
+    const p = JSON.parse(saved);
+    maxUnlocked = p.maxUnlocked || 1;
+    currentLevel = Math.min(p.currentLevel || 1, maxUnlocked);
+  }
+} catch(e){}
+
+function saveProgress(){
+  try {
+    localStorage.setItem("sniperProgress", JSON.stringify({ maxUnlocked, currentLevel }));
+  } catch(e){}
+}
+
+// ============== LEVEL GENERATOR ==============
+function generateLevel(lvl){
+  targets = [];
+  ropes = [];
+  locks = [];
+  particles = [];
+  killCount = 0;
+  wind = 0;
+  levelTime = 0;
+
+  const baseTargets = Math.min(2 + Math.floor(lvl / 5), 8);
+  const moveChance = Math.min(0.1 + lvl * 0.008, 0.65);
+  const ropeChance = lvl > 8 ? Math.min(0.15 + (lvl-8)*0.01, 0.5) : 0;
+  const lockChance = lvl > 15 ? Math.min(0.1 + (lvl-15)*0.008, 0.4) : 0;
+  const coverChance = lvl > 5 ? 0.3 : 0;
+
+  maxAmmo = easyMode ? 999 : Math.max(3, 8 - Math.floor(lvl / 12));
+  ammo = maxAmmo;
+
+  if (lvl > 25) wind = (Math.random() - 0.5) * Math.min(0.8, (lvl-25)*0.02);
+
+  for (let i = 0; i < baseTargets; i++) {
+    const hasCover = Math.random() < coverChance;
+    const isMoving = Math.random() < moveChance;
+    const t = {
+      x: 0.15 + Math.random() * 0.7,
+      y: 0.25 + Math.random() * 0.45,
+      w: 0.04 + Math.random() * 0.015,
+      h: 0.11 + Math.random() * 0.03,
+      alive: true,
+      headR: 0.018,
+      moving: isMoving,
+      moveDir: Math.random() > 0.5 ? 1 : -1,
+      moveSpeed: 0.0004 + Math.random() * 0.0006 * (1 + lvl/40),
+      moveRange: 0.08 + Math.random() * 0.1,
+      baseX: 0,
+      cover: hasCover,
+      hidden: false
+    };
+    t.baseX = t.x;
+    targets.push(t);
+  }
+
+  if (Math.random() < ropeChance) {
+    const rx = 0.2 + Math.random() * 0.6;
+    ropes.push({ x: rx, y1: 0.1, y2: 0.55, alive: true, thickness: 0.006 });
+    if (targets.length > 0) {
+      const t = targets[targets.length-1];
+      t.ropeId = ropes.length-1;
+      t.y = 0.35;
+    }
+  }
+
+  if (Math.random() < lockChance) {
+    locks.push({ x: 0.75 + Math.random()*0.15, y: 0.2 + Math.random()*0.3, size: 0.04, alive: true });
+    if (targets.length > 1) {
+      targets[0].hidden = true;
+      targets[0].lockId = locks.length-1;
+    }
+  }
+
+  totalTargets = targets.length;
+}
+
+// ============== INPUT ==============
+let lastTouchX = 0, lastTouchY = 0;
+
+function getPos(e){
+  const t = e.changedTouches ? e.changedTouches[0] : e;
+  return { x: t.clientX / W(), y: t.clientY / H() };
+}
+
+canvas.addEventListener("touchstart", e => {
+  e.preventDefault();
+  if (gameState !== "play") return;
+  const p = getPos(e);
+  if (p.y > 0.88) return;
+  isHolding = true;
+  lastTouchX = p.x;
+  lastTouchY = p.y;
+}, {passive:false});
+
+canvas.addEventListener("touchmove", e => {
+  e.preventDefault();
+  if (!isHolding || gameState !== "play") return;
+  const p = getPos(e);
+  const dx = p.x - lastTouchX;
+  const dy = p.y - lastTouchY;
+  const sens = 0.55 / zoomLevel;
+  aimX = Math.max(0.05, Math.min(0.95, aimX + dx * sens));
+  aimY = Math.max(0.08, Math.min(0.85, aimY + dy * sens));
+  lastTouchX = p.x;
+  lastTouchY = p.y;
+}, {passive:false});
+
+canvas.addEventListener("touchend", e => {
+  e.preventDefault();
+  if (!isHolding) return;
+  isHolding = false;
+  if (gameState === "play") fire();
+}, {passive:false});
+
+canvas.addEventListener("mousedown", e => {
+  if (gameState !== "play") return;
+  isHolding = true;
+  const p = getPos(e);
+  lastTouchX = p.x; lastTouchY = p.y;
+});
+canvas.addEventListener("mousemove", e => {
+  if (!isHolding) return;
+  const p = getPos(e);
+  const dx = p.x - lastTouchX, dy = p.y - lastTouchY;
+  const sens = 0.55 / zoomLevel;
+  aimX = Math.max(0.05, Math.min(0.95, aimX + dx * sens));
+  aimY = Math.max(0.08, Math.min(0.85, aimY + dy * sens));
+  lastTouchX = p.x; lastTouchY = p.y;
+});
+canvas.addEventListener("mouseup", () => {
+  if (isHolding && gameState === "play") {
+    isHolding = false;
+    fire();
+  }
+});
+
+btnReload.addEventListener("click", e => {
+  e.stopPropagation();
+  if (gameState === "play" && !easyMode) {
+    ammo = maxAmmo;
+    showMsg("RELOADED", 600);
+  }
+});
+
+btnZoom.addEventListener("click", e => {
+  e.stopPropagation();
+  zoomLevel = zoomLevel >= 3 ? 1 : zoomLevel + 1;
+  btnZoom.textContent = "ZOOM x" + zoomLevel;
+});
+
+btnEasy.addEventListener("click", e => {
+  e.stopPropagation();
+  easyMode = !easyMode;
+  btnEasy.textContent = easyMode ? "EASY: ON" : "EASY: OFF";
+  btnEasy.classList.toggle("active", easyMode);
+  if (gameState === "play") {
+    maxAmmo = easyMode ? 999 : Math.max(3, 8 - Math.floor(currentLevel / 12));
+    ammo = maxAmmo;
+  }
+});
+
+startBtn.addEventListener("click", () => {
+  startScreen.style.display = "none";
+  startLevel(currentLevel);
+});
+
+// ============== GAME LOGIC ==============
+function startLevel(lvl){
+  currentLevel = lvl;
+  generateLevel(lvl);
+  gameState = "play";
+  aimX = 0.5; aimY = 0.38;
+  zoomLevel = 1;
+  btnZoom.textContent = "ZOOM x1";
+  showMsg("LEVEL " + lvl, 900);
+  saveProgress();
+}
+
+function fire(){
+  if (ammo <= 0 && !easyMode) {
+    showMsg("OUT OF AMMO", 800);
+    return;
+  }
+  if (!easyMode) ammo--;
+
+  const shotX = aimX + wind * 0.04;
+  const shotY = aimY;
+
+  for (const r of ropes) {
+    if (!r.alive) continue;
+    const dx = Math.abs(shotX - r.x);
+    if (dx < 0.025 && shotY > r.y1 && shotY < r.y2) {
+      r.alive = false;
+      spawnParticles(r.x, (r.y1+r.y2)/2, "#c8a060", 14);
+      showMsg("ROPE CUT!", 700);
+      targets.forEach(t => {
+        if (t.ropeId !== undefined && ropes[t.ropeId] === r) {
+          t.y += 0.18;
+          t.moving = true;
+        }
+      });
+      return;
+    }
+  }
+
+  for (const l of locks) {
+    if (!l.alive) continue;
+    const dx = shotX - l.x, dy = shotY - l.y;
+    if (dx*dx + dy*dy < 0.0025) {
+      l.alive = false;
+      spawnParticles(l.x, l.y, "#ffd700", 18);
+      showMsg("LOCK BROKEN!", 700);
+      targets.forEach(t => {
+        if (t.lockId !== undefined && locks[t.lockId] === l) t.hidden = false;
+      });
+      return;
+    }
+  }
+
+  let hit = false;
+  for (const t of targets) {
+    if (!t.alive || t.hidden) continue;
+    const headX = t.x;
+    const headY = t.y - t.h * 0.38;
+    const dx = shotX - headX;
+    const dy = shotY - headY;
+    if (Math.sqrt(dx*dx + dy*dy) < t.headR * 1.35) {
+      t.alive = false;
+      killCount++;
+      spawnParticles(headX, headY, "#e04040", 22);
+      spawnParticles(headX, headY, "#ffffff", 8);
+      hit = true;
+      break;
+    }
+  }
+
+  if (!hit) spawnParticles(shotX, shotY, "#888", 6);
+
+  const alive = targets.filter(t => t.alive && !t.hidden).length;
+  const stillHidden = targets.some(t => t.hidden && t.alive);
+  if (alive === 0 && !stillHidden) {
+    gameState = "win";
+    if (currentLevel >= maxUnlocked) maxUnlocked = Math.min(100, currentLevel + 1);
+    saveProgress();
+    setTimeout(() => {
+      showMsg("LEVEL CLEAR!", 1400);
+      setTimeout(() => {
+        if (currentLevel < 100) startLevel(currentLevel + 1);
+        else showMsg("ALL 100 LEVELS COMPLETE!", 3000);
+      }, 1500);
+    }, 400);
+  } else if (ammo <= 0 && !easyMode) {
+    gameState = "lose";
+    setTimeout(() => showMsg("MISSION FAILED\\nTap RELOAD or restart", 2000), 300);
+  }
+}
+
+function spawnParticles(x, y, color, count){
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random()-0.5)*0.012,
+      vy: (Math.random()-0.5)*0.012 - 0.002,
+      life: 0.6 + Math.random()*0.5,
+      maxLife: 1,
+      color,
+      size: 0.004 + Math.random()*0.006
+    });
+  }
+}
+
+function showMsg(text, duration){
+  msgEl.innerHTML = text.replace("\\n","<br>");
+  msgEl.style.opacity = "1";
+  clearTimeout(showMsg.timer);
+  showMsg.timer = setTimeout(() => { msgEl.style.opacity = "0"; }, duration);
+}
+
+// ============== RENDER ==============
+function resize(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = W() * dpr;
+  canvas.height = H() * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener("resize", resize);
+resize();
+
+function drawStickFigure(t){
+  if (!t.alive || t.hidden) return;
+  const x = t.x * W();
+  const y = t.y * H();
+  const s = Math.min(W(), H());
+  const scale = t.w * s * 8;
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = "#2a2a2a";
+  ctx.fillStyle = "#1a1a1a";
+  ctx.lineWidth = 3;
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(0, -scale*0.15);
+  ctx.lineTo(0, scale*0.35);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(0, scale*0.35);
+  ctx.lineTo(-scale*0.25, scale*0.7);
+  ctx.moveTo(0, scale*0.35);
+  ctx.lineTo(scale*0.25, scale*0.7);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(0, -scale*0.05);
+  ctx.lineTo(-scale*0.3, scale*0.15);
+  ctx.moveTo(0, -scale*0.05);
+  ctx.lineTo(scale*0.3, scale*0.15);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(0, -scale*0.38, scale*0.22, 0, Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Headset
+  ctx.strokeStyle = "#4a6a4a";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(0, -scale*0.38, scale*0.28, 0.3, Math.PI-0.3);
+  ctx.stroke();
+  ctx.fillStyle = "#3a5a3a";
+  ctx.beginPath();
+  ctx.arc(-scale*0.22, -scale*0.38, scale*0.09, 0, Math.PI*2);
+  ctx.arc(scale*0.22, -scale*0.38, scale*0.09, 0, Math.PI*2);
+  ctx.fill();
+
+  if (t.cover) {
+    ctx.fillStyle = "rgba(60,80,60,0.5)";
+    ctx.fillRect(-scale*0.5, scale*0.1, scale, scale*0.55);
+  }
+  ctx.restore();
+}
+
+function drawScope(){
+  const cx = aimX * W();
+  const cy = aimY * H();
+  const r = Math.min(W(), H()) * 0.38 / zoomLevel;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, W(), H());
+  ctx.arc(cx, cy, r, 0, Math.PI*2, true);
+  ctx.fillStyle = "rgba(0,0,0,0.72)";
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI*2);
+  ctx.strokeStyle = "#2a4a2a";
+  ctx.lineWidth = 6;
+  ctx.stroke();
+  ctx.strokeStyle = "#5a8a5a";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(180,255,180,0.85)";
+  ctx.lineWidth = 1.5;
+  const cross = r * 0.18;
+  ctx.beginPath();
+  ctx.moveTo(cx - cross, cy); ctx.lineTo(cx + cross, cy);
+  ctx.moveTo(cx, cy - cross); ctx.lineTo(cx, cy + cross);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 2.5, 0, Math.PI*2);
+  ctx.fillStyle = "#a0ffa0";
+  ctx.fill();
+
+  if (zoomLevel > 1) {
+    ctx.fillStyle = "rgba(160,255,160,0.7)";
+    ctx.font = "bold 13px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText("x" + zoomLevel, cx, cy + r + 18);
+  }
+  ctx.restore();
+}
+
+function render(dt){
+  ctx.fillStyle = "#1a2a1a";
+  ctx.fillRect(0, 0, W(), H());
+
+  ctx.fillStyle = "#2a3a2a";
+  ctx.fillRect(0, H()*0.72, W(), H()*0.28);
+  ctx.fillStyle = "#3a4a3a";
+  ctx.fillRect(0, H()*0.72, W(), 3);
+
+  ctx.fillStyle = "#243024";
+  ctx.beginPath();
+  ctx.moveTo(0, H()*0.72);
+  for (let i=0; i<=10; i++) {
+    ctx.lineTo(W()*i/10, H()*0.72 - Math.sin(i*0.9 + currentLevel)*H()*0.04);
+  }
+  ctx.lineTo(W(), H());
+  ctx.lineTo(0, H());
+  ctx.fill();
+
+  if (gameState === "play") {
+    targets.forEach(t => {
+      if (t.alive && t.moving) {
+        t.x += t.moveDir * t.moveSpeed * 60 * dt;
+        if (Math.abs(t.x - t.baseX) > t.moveRange) t.moveDir *= -1;
+      }
+    });
+  }
+
+  ropes.forEach(r => {
+    if (!r.alive) return;
+    ctx.strokeStyle = "#8a7040";
+    ctx.lineWidth = r.thickness * Math.min(W(),H()) * 4;
+    ctx.beginPath();
+    ctx.moveTo(r.x * W(), r.y1 * H());
+    ctx.lineTo(r.x * W(), r.y2 * H());
+    ctx.stroke();
+  });
+
+  locks.forEach(l => {
+    if (!l.alive) return;
+    const x = l.x * W(), y = l.y * H();
+    const s = l.size * Math.min(W(),H());
+    ctx.fillStyle = "#c0a020";
+    ctx.fillRect(x - s/2, y - s/2, s, s);
+    ctx.strokeStyle = "#806010";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x - s/2, y - s/2, s, s);
+    ctx.fillStyle = "#402010";
+    ctx.beginPath();
+    ctx.arc(x, y, s*0.25, 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  targets.forEach(drawStickFigure);
+
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.00015;
+    p.life -= dt;
+    if (p.life <= 0) { particles.splice(i,1); continue; }
+    ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x * W(), p.y * H(), p.size * Math.min(W(),H()), 0, Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  if (gameState === "play" || gameState === "win" || gameState === "lose") {
+    if (isHolding) {
+      scopeSway += dt * 2.2;
+      aimX += Math.sin(scopeSway) * 0.00015;
+      aimY += Math.cos(scopeSway * 0.8) * 0.00012;
+    }
+    drawScope();
+  }
+
+  const aliveCount = targets.filter(t => t.alive).length;
+  hud.innerHTML = `LVL ${currentLevel}/100<br>AMMO ${easyMode ? "∞" : ammo}/${maxAmmo}<br>KILLS ${killCount}/${totalTargets}` +
+    (wind !== 0 ? `<br>WIND ${wind > 0 ? "→" : "←"}` : "");
+}
+
+function loop(timestamp){
+  const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
+  lastTime = timestamp;
+  if (gameState === "play") levelTime += dt;
+  render(dt);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+document.addEventListener("gesturestart", e => e.preventDefault());
+document.addEventListener("gesturechange", e => e.preventDefault());
+
+})();
+</script>
+</body>
+</html>
